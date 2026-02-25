@@ -1,0 +1,12 @@
+{
+  "name": "ai-dev-template",
+  "private": true,
+  "packageManager": "pnpm@latest",
+  "scripts": {
+    "format": "prettier -w .",
+    "format:check": "prettier -c ."
+  },
+  "devDependencies": {
+    "prettier": "^3.0.0"
+  }
+}

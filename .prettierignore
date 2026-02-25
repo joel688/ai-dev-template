@@ -1,0 +1,4 @@
+.git/
+.codex/
+node_modules/
+pnpm-lock.yaml
