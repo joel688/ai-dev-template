@@ -87,3 +87,11 @@ A change is done only if:
 2. Choose role and task scope.
 3. Follow gate prompts exactly.
 4. Use only commands listed in `WORKSPACE_CHECKS.md` and only after Gate 3 approval.
+
+## How to Add a New Service
+
+1. Create the service directory and manifest (`package.json`, `Cargo.toml`, etc.).
+2. Add exactly one service entry in `WORKSPACE_CHECKS.md` under `Entries`.
+3. Fill all fields: `path`, `stack`, `install`, `fmt`, `build`, `lint`, `type`, `test`.
+4. Use exact runnable commands for checks; use `N/A` only when a check truly does not apply.
+5. If a new entry or command is needed, propose it and wait for human approval before adding it.
