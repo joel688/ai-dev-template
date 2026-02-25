@@ -1,0 +1,95 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  echo "Usage:"
+  echo "  scripts/wt up <base-branch>        # create 5 role worktrees (each on its own branch)"
+  echo "  scripts/wt rm <base-branch>        # remove role worktrees + delete role branches"
+  echo "  scripts/wt ls                      # list worktrees"
+  exit 1
+}
+
+cmd="${1:-}"
+base="${2:-}"
+
+repo_root="$(git rev-parse --show-toplevel)"
+wt_base="${repo_root}-wt"
+roles=(explorer architect implementer qa security)
+
+role_branch() {
+  local role="$1"
+  local base_branch="$2"
+  local slug="${base_branch#feat/}"
+  echo "wt/${role}/${slug}"
+}
+
+ensure_branch_exists() {
+  local br="$1"
+  if ! git show-ref --verify --quiet "refs/heads/$br"; then
+    return 1
+  fi
+  return 0
+}
+
+case "$cmd" in
+  up)
+    [[ -n "$base" ]] || usage
+    mkdir -p "$wt_base"
+
+    # Ensure base branch exists (create from current HEAD if missing)
+    if ! ensure_branch_exists "$base"; then
+      git checkout -b "$base"
+    fi
+
+    # Create a dedicated branch per role from base, and a worktree for it
+    for r in "${roles[@]}"; do
+      rb="$(role_branch "$r" "$base")"
+      path="$wt_base/$r"
+
+      if ! ensure_branch_exists "$rb"; then
+        git branch "$rb" "$base"
+      fi
+
+      if [[ -d "$path" ]]; then
+        echo "[wt] exists: $path (skip)"
+      else
+        git worktree add "$path" "$rb"
+        echo "[wt] created: $path -> $rb"
+      fi
+    done
+
+    echo ""
+    echo "Worktrees ready under: $wt_base"
+    git worktree list
+    ;;
+
+  rm)
+    [[ -n "$base" ]] || usage
+
+    # Remove worktrees
+    for r in "${roles[@]}"; do
+      path="$wt_base/$r"
+      if [[ -d "$path" ]]; then
+        git worktree remove "$path" || true
+        echo "[wt] removed: $path"
+      fi
+    done
+
+    # Delete role branches (safe delete; may fail if not fully merged)
+    for r in "${roles[@]}"; do
+      rb="$(role_branch "$r" "$base")"
+      if ensure_branch_exists "$rb"; then
+        git branch -D "$rb" || true
+        echo "[wt] deleted branch: $rb"
+      fi
+    done
+    ;;
+
+  ls)
+    git worktree list
+    ;;
+
+  *)
+    usage
+    ;;
+esac
