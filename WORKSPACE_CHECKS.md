@@ -49,7 +49,7 @@ Use this exact shape for each entry:
 - path: .
 - stack: node
 - install: pnpm -s install
-- fmt: pnpm -s format:check
+- fmt: pnpm -s format && pnpm -s format:check
 - build: N/A
 - lint: N/A
 - type: N/A
